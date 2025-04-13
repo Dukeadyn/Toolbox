@@ -12,34 +12,17 @@
         .close-button:hover, .close-button:focus { color: black; text-decoration: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
-        input:disabled, select:disabled, button:disabled { background-color: #e9ecef !important; opacity: 0.7 !important; cursor: not-allowed !important; } /* Ensure disabled styles override */
+        input:disabled, select:disabled, button:disabled { background-color: #e9ecef !important; opacity: 0.7 !important; cursor: not-allowed !important; }
         .status-select { min-width: 120px; padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; background-color: white; color: #1f2937; transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; }
         .status-select:disabled { border: none; appearance: none; -webkit-appearance: none; -moz-appearance: none; padding: 0.25rem 0; }
-        #visualizer-section { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; background-color: #f9fafb; position: relative; /* Needed for close button positioning */ }
+        #visualizer-section { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; background-color: #f9fafb; position: relative; }
         #viz-pending-months { max-height: 6em; overflow-y: auto; display: block; }
-        /* Close button for summary view */
-        #close-summary-button {
-            position: absolute;
-            top: 0.5rem; /* 8px */
-            right: 0.75rem; /* 12px */
-            font-size: 1.5rem; /* text-2xl */
-            line-height: 1;
-            color: #9ca3af; /* gray-400 */
-            cursor: pointer;
-            padding: 0.25rem;
-        }
-        #close-summary-button:hover { color: #374151; /* gray-700 */ }
-        /* Print Styles */
-        @media print {
-            body * { visibility: hidden; } /* Hide everything by default */
-            #visualizer-section, #visualizer-section * { visibility: visible; } /* Show only visualizer */
-            #visualizer-section {
-                position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; margin: 0; background-color: white;
-            }
-            #close-summary-button { display: none; } /* Hide close button when printing */
-            /* Adjust grid for printing if needed */
-             #visualizer-section .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } /* Example: 2 columns for print */
-        }
+        #close-summary-button { position: absolute; top: 0.5rem; right: 0.75rem; font-size: 1.5rem; line-height: 1; color: #9ca3af; cursor: pointer; padding: 0.25rem; }
+        #close-summary-button:hover { color: #374151; }
+        #search-results-list { position: absolute; background-color: white; border: 1px solid #d1d5db; border-top: none; border-radius: 0 0 0.375rem 0.375rem; z-index: 40; max-height: 150px; overflow-y: auto; width: calc(100% - 2px); left: 1px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .search-result-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem; color: #374151; }
+        .search-result-item:hover { background-color: #f3f4f6; }
+        @media print { body * { visibility: hidden; } #visualizer-section, #visualizer-section * { visibility: visible; } #visualizer-section { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; margin: 0; background-color: white; } #close-summary-button { display: none; } #visualizer-section .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,86 +34,21 @@
 
         <div id="main-content-wrapper">
             <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">Administrador de Pagos</h1>
-
-            <div class="flex flex-wrap gap-4 mb-6 items-center justify-between">
-                <div class="flex flex-wrap gap-2">
-                    <button id="import-button" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out">Importar JSON</button>
-                    <input type="file" id="import-file" accept=".json" class="hidden">
-                    <button id="export-button" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out">Exportar Todo JSON</button>
-                    <button id="add-user-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out">Añadir Usuario</button>
-                </div>
-                <div class="flex flex-wrap gap-4 items-center">
-                     <div class="relative">
-                        <input type="text" id="search-input" placeholder="Buscar ID o Nombre..." class="border border-gray-300 rounded-lg py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
-                        </span>
-                    </div>
-                    <div>
-                         <label for="user-filter-select" class="sr-only">Filtrar por Usuario</label>
-                         <select id="user-filter-select" class="border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                             <option value="">-- Todos los Usuarios --</option>
-                         </select>
-                    </div>
-                     <div>
-                         <button id="view-summary-button" class="bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out" disabled>Ver Resumen</button>
-                     </div>
-                </div>
-            </div>
-
+            <div class="flex flex-wrap gap-4 mb-6 items-center justify-between"> <div class="flex flex-wrap gap-2"> <button id="import-button" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out">Importar JSON</button> <input type="file" id="import-file" accept=".json" class="hidden"> <button id="export-button" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out">Exportar Todo JSON</button> <button id="add-user-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out">Añadir Usuario</button> </div><div class="flex flex-wrap gap-4 items-center"> <div class="relative"> <div class="relative"> <input type="text" id="search-input" placeholder="Buscar ID o Nombre..." class="border border-gray-300 rounded-lg py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" autocomplete="off"> <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"> <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg> </span> </div><div id="search-results-list" class="hidden"> </div></div><div> <label for="user-filter-select" class="sr-only">Filtrar por Usuario</label> <select id="user-filter-select" class="border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"> <option value="">-- Todos los Usuarios --</option> </select> </div><div> <button id="view-summary-button" class="bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out" disabled>Ver Resumen</button> </div></div></div>
             <div id="status-message" class="mb-4 text-center text-sm min-h-[1.25rem]"></div>
-
-             <div id="table-wrapper" class="overflow-x-auto rounded-lg shadow">
-                 <table class="min-w-full divide-y divide-gray-200">
-                     <thead class="bg-gray-50">
-                         <tr>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Usuario</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mes Calendario</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día Pago (Ciclo 30d)</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Cuenta</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo Usuario</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ACCS</th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                         </tr>
-                     </thead>
-                     <tbody id="subscription-table-body" class="bg-white divide-y divide-gray-200">
-                         <tr id="no-data-row">
-                             <td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No hay usuarios registrados.</td>
-                         </tr>
-                     </tbody>
-                 </table>
-             </div>
+             <div id="table-wrapper" class="overflow-x-auto rounded-lg shadow"> <table class="min-w-full divide-y divide-gray-200"> <thead class="bg-gray-50"> <tr> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Usuario</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deuda Añadida (Mes)</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mes Calendario</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día Pago (Ciclo 30d)</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Cuenta</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo Usuario</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ACCS</th> <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th> </tr></thead> <tbody id="subscription-table-body" class="bg-white divide-y divide-gray-200"> <tr id="no-data-row"> <td colspan="10" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No hay usuarios registrados.</td> </tr></tbody> </table> </div>
          </div>
 
-        <div id="visualizer-section" class="hidden">
-             <button id="close-summary-button" title="Cerrar Resumen">&times;</button>
-            <h3 class="text-lg font-semibold mb-2 text-gray-700">Estado de Cuenta</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                    <span class="text-sm font-medium text-gray-500">Nombre:</span>
-                    <span id="viz-user-name" class="block text-gray-800 font-medium"></span>
-                </div>
-                <div>
-                    <span class="text-sm font-medium text-gray-500">Total Pagado (Suscripción):</span>
-                    <span id="viz-total-paid" class="block text-green-600 font-medium"></span>
-                </div>
-                <div id="viz-debt-section" class="hidden">
-                    <span class="text-sm font-medium text-gray-500">Deuda Restante:</span>
-                    <span id="viz-remaining-debt" class="block text-red-600 font-medium"></span>
-                </div>
-                 <div id="viz-pending-section" class="hidden">
-                    <span class="text-sm font-medium text-gray-500">Meses Pendientes/Adeudo:</span>
-                    <span id="viz-pending-months" class="block text-orange-600 font-medium text-xs"></span>
-                </div>
-            </div>
-        </div>
+        <div id="visualizer-section" class="hidden"> <button id="close-summary-button" title="Cerrar Resumen">&times;</button> <h3 class="text-lg font-semibold mb-2 text-gray-700">Estado de cuenta</h3> <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"> <div> <span class="text-sm font-medium text-gray-500">Nombre:</span> <span id="viz-user-name" class="block text-gray-800 font-medium"></span> </div><div> <span class="text-sm font-medium text-gray-500">Total Pagado (Suscripción):</span> <span id="viz-total-paid" class="block text-green-600 font-medium"></span> </div><div id="viz-debt-section" class="hidden"> <span class="text-sm font-medium text-gray-500">Deuda Restante:</span> <span id="viz-remaining-debt" class="block text-red-600 font-medium"></span> </div><div id="viz-pending-section" class="hidden"> <span class="text-sm font-medium text-gray-500">Meses Pendientes/Adeudo:</span> <span id="viz-pending-months" class="block text-orange-600 font-medium text-xs"></span> </div></div></div>
 
     </div>
 
     <div id="add-user-modal" class="modal"> <div class="modal-content"> <span id="close-add-user-modal" class="close-button">&times;</span> <h2 class="text-xl font-semibold mb-4 text-gray-700">Añadir Nuevo Usuario (Registro Inicial)</h2> <form id="add-user-form"> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-4"> <div> <label class="block text-sm font-medium text-gray-700 mb-1">ID Usuario</label> <input type="text" id="new-user-id-display" disabled class="w-full border border-gray-300 rounded-lg py-2 px-3 bg-gray-100"> </div><div> <label for="new-user-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre Usuario <span class="text-red-500">*</span></label> <input type="text" id="new-user-name" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> </div><div> <label for="initial-year" class="block text-sm font-medium text-gray-700 mb-1">Año de Inicio <span class="text-red-500">*</span></label> <input type="number" id="initial-year" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 2024"> </div><div> <label for="initial-month" class="block text-sm font-medium text-gray-700 mb-1">Mes de Inicio <span class="text-red-500">*</span></label> <select id="initial-month" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select> </div><div> <label for="initial-day" class="block text-sm font-medium text-gray-700 mb-1">Día de Pago Inicial <span class="text-red-500">*</span></label> <input type="number" id="initial-day" min="1" max="31" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> </div><div> <label for="initial-amount-select" class="block text-sm font-medium text-gray-700 mb-1">Monto Inicial <span class="text-red-500">*</span></label> <select id="initial-amount-select" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> <option value="">Selecciona...</option> <option value="25">25</option> <option value="30">30</option> <option value="50">50</option> <option value="100">100</option> <option value="150">150</option> <option value="custom">Personalizado</option> </select> </div><div id="custom-amount-wrapper" class="hidden md:col-span-2"> <label for="initial-custom-amount" class="block text-sm font-medium text-gray-700 mb-1">Monto Personalizado <span class="text-red-500">*</span></label> <input type="number" id="initial-custom-amount" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Introduce el monto"> </div><div class="md:col-span-2"> <label for="initial-user-type" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Usuario Inicial <span class="text-red-500">*</span></label> <select id="initial-user-type" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> <option value="Sin intereses">Sin intereses</option> <option value="Con intereses">Con intereses</option> </select> </div><div class="md:col-span-2"> <label for="initial-accs" class="block text-sm font-medium text-gray-700 mb-1">ACCS Inicial</label> <input type="text" id="initial-accs" placeholder="Ej: DZ, CR" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> </div><div class="md:col-span-2"> <label for="initial-debt" class="block text-sm font-medium text-gray-700 mb-1">Deuda Inicial (Opcional)</label> <input type="number" id="initial-debt" min="0" step="0.01" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: 500.00"> </div></div><div class="flex justify-end gap-3 mt-6"> <button type="button" id="cancel-add-user-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg shadow">Cancelar</button> <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg shadow">Guardar Usuario</button> </div></form> </div></div>
-    <div id="edit-details-modal" class="modal"> <div class="modal-content"> <span id="close-edit-details-modal" class="close-button">&times;</span> <h2 class="text-xl font-semibold mb-4 text-gray-700">Editar Detalles Mensuales</h2> <form id="edit-details-form"> <input type="hidden" id="edit-details-record-id"> <p class="mb-4 text-sm text-gray-600">Editando para: <strong id="edit-details-user-info"></strong> - Mes Calendario: <strong id="edit-details-month"></strong></p> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-4"> <div> <label for="edit-details-amount-select" class="block text-sm font-medium text-gray-700 mb-1">Monto <span class="text-red-500">*</span></label> <select id="edit-details-amount-select" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> <option value="">Selecciona...</option> <option value="25">25</option> <option value="30">30</option> <option value="50">50</option> <option value="100">100</option> <option value="150">150</option> <option value="custom">Personalizado</option> </select> </div><div id="edit-details-custom-amount-wrapper" class="hidden md:col-span-1"> <label for="edit-details-custom-amount" class="block text-sm font-medium text-gray-700 mb-1">Monto Personalizado <span class="text-red-500">*</span></label> <input type="number" id="edit-details-custom-amount" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Introduce monto"> </div><div class="md:col-span-2"> <label for="edit-details-user-type" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Usuario <span class="text-red-500">*</span></label> <select id="edit-details-user-type" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> <option value="Sin intereses">Sin intereses</option> <option value="Con intereses">Con intereses</option> </select> </div><div class="md:col-span-2"> <label for="edit-details-accs" class="block text-sm font-medium text-gray-700 mb-1">ACCS</label> <input type="text" id="edit-details-accs" placeholder="Ej: DZ, CR" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> </div></div><div class="flex justify-end gap-3 mt-6"> <button type="button" id="cancel-edit-details-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg shadow">Cancelar</button> <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg shadow">Guardar Cambios</button> </div></form> </div></div>
+    <div id="edit-details-modal" class="modal"> <div class="modal-content"> <span id="close-edit-details-modal" class="close-button">&times;</span> <h2 class="text-xl font-semibold mb-4 text-gray-700">Editar Detalles Mensuales</h2> <form id="edit-details-form"> <input type="hidden" id="edit-details-record-id"> <input type="hidden" id="edit-details-added-debt" value="0"> <p class="mb-4 text-sm text-gray-600">Editando para: <strong id="edit-details-user-info"></strong> - Mes Calendario: <strong id="edit-details-month"></strong></p> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-4"> <div> <label for="edit-details-amount-select" class="block text-sm font-medium text-gray-700 mb-1">Monto <span class="text-red-500">*</span></label> <select id="edit-details-amount-select" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> <option value="">Selecciona...</option> <option value="25">25</option> <option value="30">30</option> <option value="50">50</option> <option value="100">100</option> <option value="150">150</option> <option value="custom">Personalizado</option> </select> </div><div id="edit-details-custom-amount-wrapper" class="hidden md:col-span-1"> <label for="edit-details-custom-amount" class="block text-sm font-medium text-gray-700 mb-1">Monto Personalizado <span class="text-red-500">*</span></label> <input type="number" id="edit-details-custom-amount" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Introduce monto"> </div><div class="md:col-span-2"> <label for="edit-details-user-type" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Usuario <span class="text-red-500">*</span></label> <select id="edit-details-user-type" required class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> <option value="Sin intereses">Sin intereses</option> <option value="Con intereses">Con intereses</option> </select> </div><div class="md:col-span-2"> <label for="edit-details-accs" class="block text-sm font-medium text-gray-700 mb-1">ACCS</label> <input type="text" id="edit-details-accs" placeholder="Ej: DZ, CR" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"> </div>
+                 <div class="md:col-span-2 mt-2">
+                     <button type="button" id="add-debt-button" class="text-sm bg-orange-500 hover:bg-orange-600 text-white font-medium py-1 px-3 rounded-lg shadow">Agregar Deuda a este mes</button>
+                 </div>
+                 </div><div class="flex justify-end gap-3 mt-6"> <button type="button" id="cancel-edit-details-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg shadow">Cancelar</button> <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg shadow">Guardar Cambios</button> </div></form> </div></div>
 
 
     <script>
@@ -140,7 +58,8 @@
         const UNPAID_STATUSES = ["Pendiente", "Adeudo", "En proceso"];
         const PENDING_DEBT_STATUSES = ["Pendiente", "Adeudo"];
         const PREDEFINED_AMOUNTS = [25, 30, 50, 100, 150];
-        const DATA_VERSION = 6; // Version includes initial debt
+        const ADEUDO_TAG = "Adeudo";
+        const DATA_VERSION = 8; // Incremented version for new debt logic
         const LOCAL_STORAGE_KEY = `subscriptionsData_v${DATA_VERSION}`;
 
         // --- DOM Elements ---
@@ -150,12 +69,12 @@
         const importFile = document.getElementById('import-file');
         const exportButton = document.getElementById('export-button');
         const searchInput = document.getElementById('search-input');
+        const searchResultsList = document.getElementById('search-results-list');
         const userFilterSelect = document.getElementById('user-filter-select');
         const viewSummaryButton = document.getElementById('view-summary-button');
         const subscriptionTableBody = document.getElementById('subscription-table-body');
         const noDataRow = document.getElementById('no-data-row');
         const statusMessage = document.getElementById('status-message');
-        // Add User Modal
         const addUserModal = document.getElementById('add-user-modal');
         const closeAddUserModalButton = document.getElementById('close-add-user-modal');
         const cancelAddUserButton = document.getElementById('cancel-add-user-button');
@@ -171,12 +90,12 @@
         const initialUserTypeSelect = document.getElementById('initial-user-type');
         const initialAccsInput = document.getElementById('initial-accs');
         const initialDebtInput = document.getElementById('initial-debt');
-        // Edit Details Modal
         const editDetailsModal = document.getElementById('edit-details-modal');
         const closeEditDetailsModalButton = document.getElementById('close-edit-details-modal');
         const cancelEditDetailsButton = document.getElementById('cancel-edit-details-button');
         const editDetailsForm = document.getElementById('edit-details-form');
         const editDetailsRecordIdInput = document.getElementById('edit-details-record-id');
+        const editDetailsAddedDebtInput = document.getElementById('edit-details-added-debt');
         const editDetailsUserInfo = document.getElementById('edit-details-user-info');
         const editDetailsMonth = document.getElementById('edit-details-month');
         const editDetailsAmountSelect = document.getElementById('edit-details-amount-select');
@@ -184,7 +103,7 @@
         const editDetailsCustomAmountInput = document.getElementById('edit-details-custom-amount');
         const editDetailsUserTypeSelect = document.getElementById('edit-details-user-type');
         const editDetailsAccsInput = document.getElementById('edit-details-accs');
-        // Visualizer Elements
+        const addDebtButton = document.getElementById('add-debt-button');
         const visualizerSection = document.getElementById('visualizer-section');
         const closeSummaryButton = document.getElementById('close-summary-button');
         const vizUserName = document.getElementById('viz-user-name');
@@ -193,7 +112,6 @@
         const vizRemainingDebt = document.getElementById('viz-remaining-debt');
         const vizPendingSection = document.getElementById('viz-pending-section');
         const vizPendingMonths = document.getElementById('viz-pending-months');
-
 
         // --- Application State ---
         let users = [];
@@ -218,37 +136,24 @@
         const CURRENT_MONTH_INDEX = CURRENT_DATE.getMonth();
 
         // --- View Mode Control ---
-        function enterSummaryView() {
-            const selectedUserId = userFilterSelect.value;
-            if (!selectedUserId) { showStatusMessage("Selecciona un usuario para ver el resumen.", true); return; }
-            isSummaryViewActive = true;
-            mainContentWrapper.classList.add('hidden');
-            updateVisualizer(selectedUserId); // Ensure data is populated
-            visualizerSection.classList.remove('hidden'); // Show the section
-        }
-
-        function exitSummaryView() {
-            isSummaryViewActive = false;
-            mainContentWrapper.classList.remove('hidden');
-            visualizerSection.classList.add('hidden');
-        }
+        function enterSummaryView() { const selectedUserId = userFilterSelect.value; if (!selectedUserId) { showStatusMessage("Selecciona un usuario para ver el resumen.", true); return; } isSummaryViewActive = true; mainContentWrapper.classList.add('hidden'); updateVisualizer(selectedUserId); visualizerSection.classList.remove('hidden'); }
+        function exitSummaryView() { isSummaryViewActive = false; mainContentWrapper.classList.remove('hidden'); visualizerSection.classList.add('hidden'); }
 
 
         // --- Modal Handling ---
-        // (Keep existing modal functions)
         function openAddUserModal() { addUserForm.reset(); newUserIdDisplay.value = generateUniqueUserId(); initialMonthSelect.innerHTML = MONTH_NAMES.map((name, index) => `<option value="${index}">${name}</option>`).join(''); initialYearInput.value = CURRENT_YEAR; initialMonthSelect.value = CURRENT_MONTH_INDEX; customAmountWrapper.classList.add('hidden'); initialCustomAmountInput.required = false; addUserModal.style.display = 'block'; newUserNameInput.focus(); }
         function closeAddUserModal() { addUserModal.style.display = 'none'; }
-        function openEditDetailsModal(recordId, userId, userName, monthName, currentType, currentAccs) { editDetailsForm.reset(); editDetailsRecordIdInput.value = recordId; editDetailsUserInfo.textContent = `${userName} (${userId})`; editDetailsMonth.textContent = monthName; const statusData = monthlyStatuses[recordId]; const baseUser = users.find(u => u.id === userId); if (!baseUser) { console.error("Cannot open edit modal: Base user not found", userId); return; } editDetailsUserTypeSelect.value = statusData?.type ?? baseUser.initialType; editDetailsAccsInput.value = statusData?.accs ?? baseUser.initialAccs; let effectiveAmount = baseUser.initialAmount; let checkDate = new Date(baseUser.initialYear, baseUser.initialMonthIndex, 1); let checkRecordId = ''; const targetYear = parseInt(monthName.split(' ')[1], 10); const targetMonthIndex = MONTH_NAMES.indexOf(monthName.split(' ')[0]); while(checkDate.getFullYear() < targetYear || (checkDate.getFullYear() === targetYear && checkDate.getMonth() <= targetMonthIndex)) { checkRecordId = generateRecordId(userId, checkDate.getFullYear(), checkDate.getMonth()); if(monthlyStatuses[checkRecordId] && monthlyStatuses[checkRecordId].hasOwnProperty('amount')) { effectiveAmount = monthlyStatuses[checkRecordId].amount; } checkDate.setMonth(checkDate.getMonth() + 1); } if (PREDEFINED_AMOUNTS.includes(effectiveAmount)) { editDetailsAmountSelect.value = String(effectiveAmount); editDetailsCustomAmountWrapper.classList.add('hidden'); editDetailsCustomAmountInput.required = false; editDetailsCustomAmountInput.value = ''; } else { editDetailsAmountSelect.value = 'custom'; editDetailsCustomAmountWrapper.classList.remove('hidden'); editDetailsCustomAmountInput.required = true; editDetailsCustomAmountInput.value = typeof effectiveAmount === 'number' ? effectiveAmount : ''; } editDetailsModal.style.display = 'block'; editDetailsAmountSelect.focus(); }
+        function openEditDetailsModal(recordId, userId, userName, monthName, currentType, currentAccs) { editDetailsForm.reset(); editDetailsRecordIdInput.value = recordId; editDetailsAddedDebtInput.value = '0'; editDetailsUserInfo.textContent = `${userName} (${userId})`; editDetailsMonth.textContent = monthName; const statusData = monthlyStatuses[recordId]; const baseUser = users.find(u => u.id === userId); if (!baseUser) { console.error("Cannot open edit modal: Base user not found", userId); return; } let effectiveAccs = statusData?.accs ?? baseUser.initialAccs; editDetailsUserTypeSelect.value = statusData?.type ?? baseUser.initialType; editDetailsAccsInput.value = effectiveAccs; let effectiveAmount = baseUser.initialAmount; let checkDate = new Date(baseUser.initialYear, baseUser.initialMonthIndex, 1); let checkRecordId = ''; const targetYear = parseInt(monthName.split(' ')[1], 10); const targetMonthIndex = MONTH_NAMES.indexOf(monthName.split(' ')[0]); while(checkDate.getFullYear() < targetYear || (checkDate.getFullYear() === targetYear && checkDate.getMonth() <= targetMonthIndex)) { checkRecordId = generateRecordId(userId, checkDate.getFullYear(), checkDate.getMonth()); if(monthlyStatuses[checkRecordId] && monthlyStatuses[checkRecordId].hasOwnProperty('amount')) { effectiveAmount = monthlyStatuses[checkRecordId].amount; } checkDate.setMonth(checkDate.getMonth() + 1); } if (PREDEFINED_AMOUNTS.includes(effectiveAmount)) { editDetailsAmountSelect.value = String(effectiveAmount); editDetailsCustomAmountWrapper.classList.add('hidden'); editDetailsCustomAmountInput.required = false; editDetailsCustomAmountInput.value = ''; } else { editDetailsAmountSelect.value = 'custom'; editDetailsCustomAmountWrapper.classList.remove('hidden'); editDetailsCustomAmountInput.required = true; editDetailsCustomAmountInput.value = typeof effectiveAmount === 'number' ? effectiveAmount : ''; } editDetailsModal.style.display = 'block'; editDetailsAmountSelect.focus(); }
         function closeEditDetailsModal() { editDetailsModal.style.display = 'none'; }
         function handleAddAmountSelectionChange() { if (initialAmountSelect.value === 'custom') { customAmountWrapper.classList.remove('hidden'); initialCustomAmountInput.required = true; initialCustomAmountInput.focus(); } else { customAmountWrapper.classList.add('hidden'); initialCustomAmountInput.required = false; initialCustomAmountInput.value = ''; } }
         function handleEditAmountSelectionChange() { if (editDetailsAmountSelect.value === 'custom') { editDetailsCustomAmountWrapper.classList.remove('hidden'); editDetailsCustomAmountInput.required = true; editDetailsCustomAmountInput.focus(); } else { editDetailsCustomAmountWrapper.classList.add('hidden'); editDetailsCustomAmountInput.required = false; editDetailsCustomAmountInput.value = ''; } }
+        function handleAddDebtClick() { const debtAmountStr = prompt("Introduce el monto de la deuda a agregar para este mes:"); if (debtAmountStr === null) return; const debtAmount = parseFloat(debtAmountStr); if (isNaN(debtAmount) || debtAmount <= 0) { showStatusMessage("Monto de deuda inválido. Introduce un número positivo.", true); return; } const currentTempDebt = parseFloat(editDetailsAddedDebtInput.value) || 0; editDetailsAddedDebtInput.value = currentTempDebt + debtAmount; showStatusMessage(`${formatCurrency(debtAmount)} agregado como deuda para este mes (se guardará al hacer clic en 'Guardar Cambios').`); }
 
 
         // --- Data Handling ---
-        // (Keep existing data handling functions)
         function saveNewUser(event) { event.preventDefault(); const initialYear = parseInt(initialYearInput.value, 10); const initialMonth = parseInt(initialMonthSelect.value, 10); const initialDay = parseInt(initialDayInput.value, 10); const amountSelection = initialAmountSelect.value; let initialAmount = null; const initialDebtValue = initialDebtInput.value.trim(); const initialDebt = initialDebtValue ? parseFloat(initialDebtValue) : 0; if (amountSelection === 'custom') { const customAmountValue = parseFloat(initialCustomAmountInput.value); if (isNaN(customAmountValue) || customAmountValue <= 0) { showStatusMessage("Introduce un monto personalizado válido (> 0).", true); return; } initialAmount = customAmountValue; } else if (amountSelection) { initialAmount = parseFloat(amountSelection); if (isNaN(initialAmount)) { showStatusMessage("Selecciona un monto válido.", true); return; } } else { showStatusMessage("Selecciona un monto inicial.", true); return; } if (isNaN(initialYear) || initialYear < 1970 || initialYear > CURRENT_YEAR + 5) { showStatusMessage("Introduce un año de inicio válido.", true); return; } if (isNaN(initialMonth) || initialMonth < 0 || initialMonth > 11) { showStatusMessage("Mes de inicio inválido.", true); return; } const daysInSelectedMonth = new Date(initialYear, initialMonth + 1, 0).getDate(); if (isNaN(initialDay) || initialDay < 1 || initialDay > daysInSelectedMonth) { showStatusMessage(`El día inicial debe ser válido para ${MONTH_NAMES[initialMonth]} ${initialYear} (1-${daysInSelectedMonth}).`, true); return; } if (isNaN(initialDebt) || initialDebt < 0) { showStatusMessage("La deuda inicial debe ser un número positivo o cero.", true); return; } const newUser = { id: newUserIdDisplay.value, name: newUserNameInput.value.trim(), initialYear: initialYear, initialMonthIndex: initialMonth, initialDay: initialDay, initialAmount: initialAmount, initialDebt: initialDebt, initialType: initialUserTypeSelect.value, initialAccs: initialAccsInput.value.trim() }; if (!newUser.name || !newUser.initialType) { showStatusMessage("Completa los campos obligatorios (*).", true); return; } if (users.some(u => u.id === newUser.id)) { showStatusMessage(`Error: El ID ${newUser.id} ya existe.`, true); newUserIdDisplay.value = generateUniqueUserId(); return; } users.push(newUser); showStatusMessage(`Usuario ${newUser.name} (${newUser.id}) añadido.`); closeAddUserModal(); renderTable(); }
-        function saveStatusChange(recordId, newStatus, userId, monthName) { console.log(`Saving status for ${recordId}: ${newStatus}`); const baseUser = users.find(u => u.id === userId); if (!baseUser) { console.error("Base user not found:", userId); return; } const currentData = monthlyStatuses[recordId] || {}; const statusUpdate = { status: newStatus }; const finalData = { ...(currentData.hasOwnProperty('amount') ? { amount: currentData.amount } : {}), ...(currentData.hasOwnProperty('type') ? { type: currentData.type } : { type: baseUser.initialType }), ...(currentData.hasOwnProperty('accs') ? { accs: currentData.accs } : { accs: baseUser.initialAccs }), ...statusUpdate }; monthlyStatuses[recordId] = finalData; showStatusMessage(`Estado actualizado a "${newStatus}" para ${userId} - ${monthName}.`); renderTable(); }
-        function saveDetailsChanges(event) { event.preventDefault(); const recordId = editDetailsRecordIdInput.value; const newType = editDetailsUserTypeSelect.value; const newAccs = editDetailsAccsInput.value.trim(); const amountSelection = editDetailsAmountSelect.value; let newAmount = null; if (amountSelection === 'custom') { const customAmountValue = parseFloat(editDetailsCustomAmountInput.value); if (isNaN(customAmountValue) || customAmountValue <= 0) { showStatusMessage("Introduce un monto personalizado válido (> 0).", true); return; } newAmount = customAmountValue; } else if (amountSelection) { newAmount = parseFloat(amountSelection); if (isNaN(newAmount)) { showStatusMessage("Selecciona un monto válido.", true); return; } } else { showStatusMessage("Selecciona un monto.", true); return; } if (!recordId) { showStatusMessage("Error: No se pudo identificar el registro.", true); return; } const userId = recordId.split('-')[0]; const baseUser = users.find(u => u.id === userId); if (!baseUser) { console.error("Base user not found:", userId); showStatusMessage("Error interno.", true); return; } const currentData = monthlyStatuses[recordId] || {}; const currentStatus = currentData.status ?? 'Pendiente'; monthlyStatuses[recordId] = { status: currentStatus, amount: newAmount, type: newType, accs: newAccs }; showStatusMessage(`Detalles actualizados para ${recordId}.`); closeEditDetailsModal(); renderTable(); }
+        function saveStatusChange(recordId, newStatus, userId, monthName) { console.log(`Saving status for ${recordId}: ${newStatus}`); const baseUser = users.find(u => u.id === userId); if (!baseUser) { console.error("Base user not found:", userId); return; } const currentData = monthlyStatuses[recordId] || {}; const statusUpdate = { status: newStatus }; const finalData = { ...(currentData.hasOwnProperty('amount') ? { amount: currentData.amount } : {}), ...(currentData.hasOwnProperty('type') ? { type: currentData.type } : { type: baseUser.initialType }), ...(currentData.hasOwnProperty('accs') ? { accs: currentData.accs } : { accs: baseUser.initialAccs }), ...(currentData.hasOwnProperty('addedDebt') ? { addedDebt: currentData.addedDebt } : {}), ...statusUpdate }; monthlyStatuses[recordId] = finalData; showStatusMessage(`Estado actualizado a "${newStatus}" para ${userId} - ${monthName}.`); renderTable(); }
+        function saveDetailsChanges(event) { event.preventDefault(); const recordId = editDetailsRecordIdInput.value; const newType = editDetailsUserTypeSelect.value; const newAccs = editDetailsAccsInput.value.trim(); const amountSelection = editDetailsAmountSelect.value; let newAmount = null; const newlyAddedDebt = parseFloat(editDetailsAddedDebtInput.value) || 0; if (amountSelection === 'custom') { const customAmountValue = parseFloat(editDetailsCustomAmountInput.value); if (isNaN(customAmountValue) || customAmountValue <= 0) { showStatusMessage("Introduce un monto personalizado válido (> 0).", true); return; } newAmount = customAmountValue; } else if (amountSelection) { newAmount = parseFloat(amountSelection); if (isNaN(newAmount)) { showStatusMessage("Selecciona un monto válido.", true); return; } } else { showStatusMessage("Selecciona un monto.", true); return; } if (!recordId) { showStatusMessage("Error: No se pudo identificar el registro.", true); return; } const userId = recordId.split('-')[0]; const baseUser = users.find(u => u.id === userId); if (!baseUser) { console.error("Base user not found:", userId); showStatusMessage("Error interno.", true); return; } const currentData = monthlyStatuses[recordId] || {}; const currentStatus = currentData.status ?? 'Pendiente'; const existingAddedDebt = currentData.addedDebt || 0; const totalAddedDebt = existingAddedDebt + newlyAddedDebt; monthlyStatuses[recordId] = { status: currentStatus, amount: newAmount, type: newType, accs: newAccs, ...(totalAddedDebt > 0 && { addedDebt: totalAddedDebt }) }; if (totalAddedDebt <= 0 && monthlyStatuses[recordId]?.hasOwnProperty('addedDebt')) { delete monthlyStatuses[recordId].addedDebt; } showStatusMessage(`Detalles actualizados para ${recordId}.` + (newlyAddedDebt > 0 ? ` Se agregó ${formatCurrency(newlyAddedDebt)} de deuda.` : '')); closeEditDetailsModal(); renderTable(); }
         function deleteUser(userIdToDelete, userName) { if (confirm(`¿Eliminar usuario ${userName} (${userIdToDelete})?\nSe intentará descargar respaldo.`)) { const userToDelete = users.find(u => u.id === userIdToDelete); if (!userToDelete) { showStatusMessage(`Error: No se encontró ${userIdToDelete}.`, true); return; } const userStatuses = {}; Object.keys(monthlyStatuses).forEach(recordId => { if (recordId.startsWith(userIdToDelete + '-')) { userStatuses[recordId] = monthlyStatuses[recordId]; } }); const dataToExport = { version: DATA_VERSION, users: [userToDelete], monthlyStatuses: userStatuses }; const sanitizedUserName = userName.replace(/[^a-z0-9]/gi, '_').toLowerCase(); const filename = `backup_${userIdToDelete}_${sanitizedUserName || 'usuario'}.json`; const exportSuccess = downloadJson(dataToExport, filename); users = users.filter(u => u.id !== userIdToDelete); Object.keys(userStatuses).forEach(recordId => { delete monthlyStatuses[recordId]; }); if (exportSuccess) { showStatusMessage(`Usuario ${userName} (${userIdToDelete}) eliminado. Respaldo iniciado.`); } else { showStatusMessage(`Usuario ${userName} (${userIdToDelete}) eliminado. NO SE PUDO generar respaldo.`, true); } renderTable(); } }
 
 
@@ -284,12 +189,14 @@
                         const recordId = generateRecordId(user.id, loopYear, loopMonthIndex);
                         const statusData = monthlyStatuses[recordId];
 
+                        // Update effective values for the current row
                         if (statusData) {
                             if (statusData.hasOwnProperty('amount')) effectiveAmount = statusData.amount;
                             if (statusData.hasOwnProperty('type')) effectiveType = statusData.type;
                             if (statusData.hasOwnProperty('accs')) effectiveAccs = statusData.accs;
                         }
                         const currentStatus = statusData?.status ?? 'Pendiente';
+                        const addedDebtThisMonth = statusData?.addedDebt || 0;
 
                         const isCurrentCalendarMonth = loopYear === CURRENT_YEAR && loopMonthIndex === CURRENT_MONTH_INDEX;
                         const isUnpaid = UNPAID_STATUSES.includes(currentStatus);
@@ -303,16 +210,17 @@
                         STATUS_OPTIONS.forEach(opt => { statusDropdownHTML += `<option value="${opt}" ${opt === currentStatus ? 'selected' : ''}>${opt}</option>`; });
                         statusDropdownHTML += `</select>`;
 
-                        const editButtonHTML = `<button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-details-btn" data-recordid="${recordId}" data-userid="${user.id}" data-username="${user.name}" data-monthname="${loopMonthName} ${loopYear}" data-currenttype="${effectiveType}" data-currentaccs="${effectiveAccs}" ${allowDetailsEdit ? '' : 'disabled'} title="${allowDetailsEdit ? 'Editar Monto/Tipo/ACCS' : 'Solo editable en mes actual o no pagado'}">Editar</button>`;
+                        const editButtonHTML = `<button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-details-btn" data-recordid="${recordId}" data-userid="${user.id}" data-username="${user.name}" data-monthname="${loopMonthName} ${loopYear}" data-currenttype="${effectiveType}" data-currentaccs="${effectiveAccs}" ${allowDetailsEdit ? '' : 'disabled'} title="${allowDetailsEdit ? 'Editar Monto/Tipo/ACCS/Deuda' : 'Solo editable en mes actual o no pagado'}">Editar</button>`;
                         const deleteButtonHTML = `<button class="text-red-600 hover:text-red-900 delete-user-btn" data-userid="${user.id}" data-username="${user.name}" title="Eliminar usuario ${user.name}">Eliminar</button>`;
 
                         const formattedAmount = formatCurrency(effectiveAmount);
+                        const formattedAddedDebt = formatCurrency(addedDebtThisMonth);
 
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.name}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">${formattedAmount}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${loopMonthName} ${loopYear}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600">${addedDebtThisMonth > 0 ? formattedAddedDebt : '-'}</td> <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${loopMonthName} ${loopYear}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">${calculatedDay}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusDropdownHTML}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${effectiveType}</td>
@@ -327,62 +235,28 @@
                 });
                 addTableButtonListeners();
             }
-            populateUserFilterSelector(); // Update filter dropdown
-            // Update visualizer only if summary view is NOT active
-            if (!isSummaryViewActive) {
-                 updateVisualizer(userFilterSelect.value); // Update based on current filter
-            }
+            populateUserFilterSelector();
+            if (!isSummaryViewActive) { updateVisualizer(userFilterSelect.value); }
         }
 
-        /** Filters users based on search input AND selected user from dropdown */
-        function filterUsers() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            const selectedUserId = userFilterSelect.value;
-            let usersToDisplay = [...users];
-            if (selectedUserId) {
-                usersToDisplay = usersToDisplay.filter(u => u.id === selectedUserId);
-            }
-            if (searchTerm) {
-                usersToDisplay = usersToDisplay.filter(u =>
-                    u.id.toLowerCase().includes(searchTerm) ||
-                    u.name.toLowerCase().includes(searchTerm)
-                );
-            }
-            return usersToDisplay;
-        }
+        /** Filters users based ONLY on selected user from dropdown */
+        function filterUsers() { const selectedUserId = userFilterSelect.value; if (selectedUserId) { return users.filter(u => u.id === selectedUserId); } return [...users]; }
 
 
         /** Adds event listeners to buttons/dropdowns in the table */
         function addTableButtonListeners() {
-            subscriptionTableBody.querySelectorAll('.status-select').forEach(select => {
-                 select.addEventListener('change', (e) => {
-                     const { recordid, userid, monthname } = e.target.dataset;
-                     saveStatusChange(recordid, e.target.value, userid, monthname);
-                 });
-            });
-            subscriptionTableBody.querySelectorAll('.edit-details-btn:not(:disabled)').forEach(button => {
-                 const newButton = button.cloneNode(true);
-                 button.parentNode.replaceChild(newButton, button);
-                 newButton.addEventListener('click', (e) => {
-                      const ds = e.target.dataset;
-                      openEditDetailsModal(ds.recordid, ds.userid, ds.username, ds.monthname, ds.currenttype, ds.currentaccs);
-                 });
-            });
-            subscriptionTableBody.querySelectorAll('.delete-user-btn').forEach(button => {
-                const newButton = button.cloneNode(true);
-                button.parentNode.replaceChild(newButton, button);
-                newButton.addEventListener('click', (e) => {
-                    const ds = e.target.dataset;
-                    deleteUser(ds.userid, ds.username);
-                });
-            });
+            subscriptionTableBody.querySelectorAll('.status-select').forEach(select => { select.addEventListener('change', (e) => { const { recordid, userid, monthname } = e.target.dataset; saveStatusChange(recordid, e.target.value, userid, monthname); }); });
+            subscriptionTableBody.querySelectorAll('.edit-details-btn:not(:disabled)').forEach(button => { const newButton = button.cloneNode(true); button.parentNode.replaceChild(newButton, button); newButton.addEventListener('click', (e) => { const ds = e.target.dataset; openEditDetailsModal(ds.recordid, ds.userid, ds.username, ds.monthname, ds.currenttype, ds.currentaccs); }); });
+            subscriptionTableBody.querySelectorAll('.delete-user-btn').forEach(button => { const newButton = button.cloneNode(true); button.parentNode.replaceChild(newButton, button); newButton.addEventListener('click', (e) => { const ds = e.target.dataset; deleteUser(ds.userid, ds.username); }); });
         }
 
         // --- Visualizer Logic ---
+        /** Calculates and updates the user summary display */
         function updateVisualizer(selectedUserId) {
+            // Hide section if no user is selected (unless in summary view mode)
             if (!selectedUserId) {
-                // Don't hide here if view mode is active, just clear content
                 if (!isSummaryViewActive) visualizerSection.classList.add('hidden');
+                // Clear fields even if hidden
                 vizUserName.textContent = '-';
                 vizTotalPaid.textContent = '-';
                 vizDebtSection.classList.add('hidden');
@@ -392,20 +266,31 @@
 
             const selectedUser = users.find(u => u.id === selectedUserId);
             if (!selectedUser) {
-                if (!isSummaryViewActive) visualizerSection.classList.add('hidden');
-                return;
+                 if (!isSummaryViewActive) visualizerSection.classList.add('hidden');
+                // Clear fields if user not found
+                vizUserName.textContent = 'Usuario no encontrado';
+                vizTotalPaid.textContent = '-';
+                vizDebtSection.classList.add('hidden');
+                vizPendingSection.classList.add('hidden');
+                return; // Exit if user not found
             }
 
+            // --- Simulation Loop for Accurate Debt Calculation ---
             vizUserName.textContent = selectedUser.name;
-
-            let totalPaid = 0;
+            let totalPaidDisplay = 0;
             let pendingMonthsList = [];
+            let currentDebt = selectedUser.initialDebt || 0; // Start with initial debt
+            let totalAddedDebtInLoop = 0; // Track debt added via monthly records
+
             const initialPaymentDate = new Date(selectedUser.initialYear, selectedUser.initialMonthIndex, selectedUser.initialDay);
             initialPaymentDate.setHours(0,0,0,0);
             let calendarDate = new Date(selectedUser.initialYear, selectedUser.initialMonthIndex, 1);
             calendarDate.setHours(0,0,0,0);
             let paymentCycleIndex = 0;
-            let effectiveAmount = selectedUser.initialAmount;
+
+            // Track previous month's values for the 'excedente' rule
+            let previousEffectiveAmount = selectedUser.initialAmount;
+            let previousEffectiveAccs = selectedUser.initialAccs;
 
             while (calendarDate.getFullYear() < CURRENT_YEAR || (calendarDate.getFullYear() === CURRENT_YEAR && calendarDate.getMonth() <= CURRENT_MONTH_INDEX)) {
                 const loopYear = calendarDate.getFullYear();
@@ -414,22 +299,64 @@
                 const recordId = generateRecordId(selectedUser.id, loopYear, loopMonthIndex);
                 const statusData = monthlyStatuses[recordId];
 
-                if (statusData && statusData.hasOwnProperty('amount')) { effectiveAmount = statusData.amount; }
+                // 1. Determine CURRENT effective values for THIS month
+                let currentEffectiveAmount = previousEffectiveAmount; // Start with propagated value
+                let currentEffectiveAccs = previousEffectiveAccs;   // Start with propagated value
+                if (statusData) {
+                    if (statusData.hasOwnProperty('amount')) currentEffectiveAmount = statusData.amount;
+                    if (statusData.hasOwnProperty('accs')) currentEffectiveAccs = statusData.accs;
+                }
                 const currentStatus = statusData?.status ?? 'Pendiente';
 
-                if (currentStatus === 'Pagado') { totalPaid += effectiveAmount; }
-                if (PENDING_DEBT_STATUSES.includes(currentStatus)) { pendingMonthsList.push(`${loopMonthName} ${loopYear}`); }
+                // 2. Process payment for THIS month using the specific logic
+                if (currentStatus === 'Pagado') {
+                    let payment = currentEffectiveAmount; // Assumed payment = effective amount for the month
+                    totalPaidDisplay += payment; // Accumulate total paid for display
 
+                    let paymentAppliedToDebt = 0;
+                    // Apply payment to debt ONLY if specific conditions met (compare current with PREVIOUS month)
+                    if (paymentCycleIndex > 0) { // Cannot compare on the first month
+                         const amountIncreased = currentEffectiveAmount > previousEffectiveAmount;
+                         const accsUnchanged = (currentEffectiveAccs || '').trim() === (previousEffectiveAccs || '').trim();
+
+                         if (amountIncreased && accsUnchanged) {
+                              const excedente = currentEffectiveAmount - previousEffectiveAmount;
+                              paymentAppliedToDebt = Math.min(excedente, currentDebt); // Apply only excess, up to current debt
+                              currentDebt -= paymentAppliedToDebt;
+                              console.log(`Month ${loopMonthName} ${loopYear}: Applied ${formatCurrency(paymentAppliedToDebt)} excess to debt.`);
+                         }
+                         // else { console.log(`Month ${loopMonthName} ${loopYear}: No excess applied. Amount Increased: ${amountIncreased}, ACCS Unchanged: ${accsUnchanged}`); }
+                    }
+                    // else { console.log(`Month ${loopMonthName} ${loopYear}: First month, no excess calculation possible.`); }
+                }
+
+                // 3. Add debt added THIS month (affects next iteration's starting debt)
+                if (statusData && statusData.hasOwnProperty('addedDebt')) {
+                    const addedDebt = statusData.addedDebt || 0;
+                    currentDebt += addedDebt;
+                    totalAddedDebtInLoop += addedDebt;
+                }
+
+                // 4. Track pending/adeudo months
+                if (PENDING_DEBT_STATUSES.includes(currentStatus)) {
+                    pendingMonthsList.push(`${loopMonthName} ${loopYear}`);
+                }
+
+                // 5. Update previous values for the *next* iteration's comparison
+                previousEffectiveAmount = currentEffectiveAmount;
+                previousEffectiveAccs = currentEffectiveAccs;
+
+                // 6. Advance loop counters
                 calendarDate.setMonth(calendarDate.getMonth() + 1);
                 paymentCycleIndex++;
-            }
+            } // End while loop
 
-            vizTotalPaid.textContent = formatCurrency(totalPaid);
+            // --- Display Results ---
+            vizTotalPaid.textContent = formatCurrency(totalPaidDisplay);
 
-            const initialDebt = selectedUser.initialDebt || 0;
-            if (initialDebt > 0) {
-                const remainingDebt = Math.max(0, initialDebt - totalPaid);
-                vizRemainingDebt.textContent = formatCurrency(remainingDebt);
+            const totalOriginalDebt = (selectedUser.initialDebt || 0) + totalAddedDebtInLoop;
+            if (totalOriginalDebt > 0) {
+                vizRemainingDebt.textContent = formatCurrency(Math.max(0, currentDebt)); // Final debt after simulation
                 vizDebtSection.classList.remove('hidden');
             } else {
                 vizDebtSection.classList.add('hidden');
@@ -442,48 +369,20 @@
                 vizPendingSection.classList.add('hidden');
             }
 
-            // Visibility is controlled by enter/exitSummaryView
-            // visualizerSection.classList.remove('hidden');
+            // Only show the section if we are in summary view mode
+            if (isSummaryViewActive) {
+                 visualizerSection.classList.remove('hidden');
+            }
         }
 
 
+        // --- Autocomplete Search Logic ---
+        function displaySearchResults(searchTerm) { if (!searchTerm) { searchResultsList.innerHTML = ''; searchResultsList.classList.add('hidden'); return; } const lowerSearchTerm = searchTerm.toLowerCase(); const matches = users.filter(user => user.name.toLowerCase().includes(lowerSearchTerm) || user.id.toLowerCase().includes(lowerSearchTerm) ).slice(0, 10); searchResultsList.innerHTML = ''; if (matches.length > 0) { matches.forEach(user => { const item = document.createElement('div'); item.classList.add('search-result-item'); item.textContent = `${user.name} (${user.id})`; item.dataset.userid = user.id; item.addEventListener('click', () => { userFilterSelect.value = user.id; userFilterSelect.dispatchEvent(new Event('change')); searchInput.value = ''; searchResultsList.innerHTML = ''; searchResultsList.classList.add('hidden'); }); searchResultsList.appendChild(item); }); searchResultsList.classList.remove('hidden'); searchResultsList.style.width = `${searchInput.offsetWidth}px`; } else { searchResultsList.classList.add('hidden'); } }
+
+
         // --- Import / Export ---
-        function exportToJson() {
-             if (users.length === 0 && Object.keys(monthlyStatuses).length === 0) { showStatusMessage("No hay datos para exportar.", true); return; }
-             try {
-                 const dataToExport = { version: DATA_VERSION, users: users, monthlyStatuses: monthlyStatuses };
-                 const filename = `suscripciones_auto_v${DATA_VERSION}_database.json`;
-                 downloadJson(dataToExport, filename);
-                 showStatusMessage("Datos completos exportados correctamente.");
-             } catch (error) { console.error("Error exporting data:", error); showStatusMessage("Error al exportar los datos completos.", true); }
-         }
-
-        function handleImportFile(event) {
-             const file = event.target.files[0];
-             if (!file) return;
-             const reader = new FileReader();
-             reader.onload = function(e) {
-                 try {
-                     const importedData = JSON.parse(e.target.result);
-                     if (typeof importedData !== 'object' || importedData === null || !importedData.users || !importedData.monthlyStatuses || !Array.isArray(importedData.users) || typeof importedData.monthlyStatuses !== 'object') { throw new Error("El archivo JSON no tiene la estructura esperada."); }
-                     if (importedData.version !== DATA_VERSION) { throw new Error(`Se esperaba versión ${DATA_VERSION} pero se encontró ${importedData.version}.`); }
-                     if (importedData.users.length > 0 && (!('initialAmount' in importedData.users[0]) || !('initialDebt' in importedData.users[0]))) { throw new Error(`El archivo importado parece ser de una versión anterior. Se requiere versión ${DATA_VERSION}.`); }
-
-                     if (importedData.users.length === 1 && file.name.startsWith('backup_')) {
-                         const userToImport = importedData.users[0]; const userStatusesToImport = importedData.monthlyStatuses; const existingUserIndex = users.findIndex(u => u.id === userToImport.id);
-                         if (existingUserIndex !== -1) { if (!confirm(`El usuario ${userToImport.name} (${userToImport.id}) ya existe. ¿Sobrescribir datos iniciales y combinar estados?`)) { showStatusMessage("Importación cancelada.", true); return; } users[existingUserIndex] = userToImport; } else { users.push(userToImport); }
-                         Object.assign(monthlyStatuses, userStatusesToImport); showStatusMessage(`Datos del usuario ${userToImport.name} importados/actualizados.`);
-                     } else {
-                         if (!confirm("Esto reemplazará TODOS los datos actuales. ¿Continuar?")) { showStatusMessage("Importación cancelada.", true); return; }
-                         users = importedData.users; monthlyStatuses = importedData.monthlyStatuses; showStatusMessage("Datos completos importados, reemplazando los anteriores.");
-                     }
-                     renderTable();
-                 } catch (error) { console.error("Error importing file:", error); showStatusMessage(`Error al importar el archivo: ${error.message}`, true);
-                 } finally { importFile.value = null; }
-             };
-             reader.onerror = function() { console.error("Error reading file:", reader.error); showStatusMessage("Error al leer el archivo.", true); importFile.value = null; };
-             reader.readAsText(file);
-         }
+        function exportToJson() { if (users.length === 0 && Object.keys(monthlyStatuses).length === 0) { showStatusMessage("No hay datos para exportar.", true); return; } try { const dataToExport = { version: DATA_VERSION, users: users, monthlyStatuses: monthlyStatuses }; const filename = `suscripciones_auto_v${DATA_VERSION}_completo.json`; downloadJson(dataToExport, filename); showStatusMessage("Datos completos exportados correctamente."); } catch (error) { console.error("Error exporting data:", error); showStatusMessage("Error al exportar los datos completos.", true); } }
+        function handleImportFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importedData = JSON.parse(e.target.result); if (typeof importedData !== 'object' || importedData === null || !importedData.users || !importedData.monthlyStatuses || !Array.isArray(importedData.users) || typeof importedData.monthlyStatuses !== 'object') { throw new Error("El archivo JSON no tiene la estructura esperada."); } if (importedData.version !== DATA_VERSION) { throw new Error(`Se esperaba versión ${DATA_VERSION} pero se encontró ${importedData.version}.`); } if (importedData.users.length > 0 && (!('initialAmount' in importedData.users[0]) || !('initialDebt' in importedData.users[0]))) { throw new Error(`El archivo importado parece ser de una versión anterior. Se requiere versión ${DATA_VERSION}.`); } if (importedData.users.length === 1 && file.name.startsWith('backup_')) { const userToImport = importedData.users[0]; const userStatusesToImport = importedData.monthlyStatuses; const existingUserIndex = users.findIndex(u => u.id === userToImport.id); if (existingUserIndex !== -1) { if (!confirm(`El usuario ${userToImport.name} (${userToImport.id}) ya existe. ¿Sobrescribir datos iniciales y combinar estados?`)) { showStatusMessage("Importación cancelada.", true); return; } users[existingUserIndex] = userToImport; } else { users.push(userToImport); } Object.assign(monthlyStatuses, userStatusesToImport); showStatusMessage(`Datos del usuario ${userToImport.name} importados/actualizados.`); } else { if (!confirm("Esto reemplazará TODOS los datos actuales. ¿Continuar?")) { showStatusMessage("Importación cancelada.", true); return; } users = importedData.users; monthlyStatuses = importedData.monthlyStatuses; showStatusMessage("Datos completos importados, reemplazando los anteriores."); } renderTable(); } catch (error) { console.error("Error importing file:", error); showStatusMessage(`Error al importar el archivo: ${error.message}`, true); } finally { importFile.value = null; } }; reader.onerror = function() { console.error("Error reading file:", reader.error); showStatusMessage("Error al leer el archivo.", true); importFile.value = null; }; reader.readAsText(file); }
 
 
         // --- Event Listeners Setup ---
@@ -495,6 +394,7 @@
 
             initialAmountSelect.addEventListener('change', handleAddAmountSelectionChange);
             editDetailsAmountSelect.addEventListener('change', handleEditAmountSelectionChange);
+            addDebtButton.addEventListener('click', handleAddDebtClick);
 
 
             closeEditDetailsModalButton.addEventListener('click', closeEditDetailsModal);
@@ -505,14 +405,16 @@
             importButton.addEventListener('click', () => importFile.click());
             importFile.addEventListener('change', handleImportFile);
 
-            searchInput.addEventListener('input', renderTable);
-            // User filter selection handles button enable/disable and view mode exit
+            // Autocomplete Search Listener
+            searchInput.addEventListener('input', () => { displaySearchResults(searchInput.value); });
+            searchInput.addEventListener('blur', () => { setTimeout(() => { if (!searchResultsList.contains(document.activeElement)) { searchResultsList.classList.add('hidden'); } }, 150); });
+            document.addEventListener('click', (event) => { if (!searchInput.contains(event.target) && !searchResultsList.contains(event.target)) { searchResultsList.classList.add('hidden'); } });
+
+            // User filter selection
             userFilterSelect.addEventListener('change', () => {
-                 viewSummaryButton.disabled = !userFilterSelect.value; // Enable/disable summary button
-                 if (!userFilterSelect.value && isSummaryViewActive) {
-                     exitSummaryView(); // Exit summary view if "Todos" is selected
-                 }
-                 renderTable(); // Re-render table based on selection
+                 viewSummaryButton.disabled = !userFilterSelect.value;
+                 if (!userFilterSelect.value && isSummaryViewActive) { exitSummaryView(); }
+                 renderTable();
             });
             // Summary view buttons
             viewSummaryButton.addEventListener('click', enterSummaryView);
@@ -531,6 +433,7 @@
             if (savedData) {
                 try {
                     const parsedData = JSON.parse(savedData);
+                    // Check version and structure for V8
                     if (parsedData && parsedData.version === DATA_VERSION && Array.isArray(parsedData.users) && typeof parsedData.monthlyStatuses === 'object' && (parsedData.users.length === 0 || ('initialAmount' in parsedData.users[0] && 'initialDebt' in parsedData.users[0]))) {
                         users = parsedData.users; monthlyStatuses = parsedData.monthlyStatuses;
                         console.log(`Data v${DATA_VERSION} loaded from localStorage:`, users.length, "users");
